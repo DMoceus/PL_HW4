@@ -55,7 +55,8 @@ swap(tree(A,B), T) :- swap(A,X), swap(B,Y), T = tree(Y,X).
 
   */
 
-
+addTree(leaf(A), A).
+addTree(tree(A,B), S) :- addTree(A,X), addTree(B,Y), S is X+Y.
 
 
 /** 3 sumR(+N,?P).
@@ -71,7 +72,8 @@ swap(tree(A,B), T) :- swap(A,X), swap(B,Y), T = tree(Y,X).
    2 clauses
 */
 
-
+sumR(1,[1]).
+sumR(A,[B,C|T]) :- X is A-1, sumR(X,[C|T]), B is A+C.
 
 
 /* 4:  sumL(+N,?S).
@@ -92,6 +94,9 @@ swap(tree(A,B), T) :- swap(A,X), swap(B,Y), T = tree(Y,X).
 
 */
 
+sumL(N,L) :- sumL(N,N,L).
+sumL(1,A,[A]).
+sumL(A,B,[B|T]) :- X is A-1, Y is B+X, sumL(X,Y,T).
 
 
 /** :  "Send more money" is a well-known puzzle. Each of the letters
@@ -136,6 +141,20 @@ assign_digits([], _List).
 assign_digits([D|Ds], List):-
         select(D, List, NewList),
         assign_digits(Ds, NewList).
+
+solv([D,E,M,N,O,R,S,Y]) :-
+	Lst = [S,E,N,D,M,O,R,Y],
+	Digits = [0,1,2,3,4,5,6,7,8,9],
+	assign_digits(Lst,Digits),
+	M = 1,
+	N is E + 1,
+	O = 0,
+	S > 7,
+	S < 10,
+	1000*S + 100*E + 10*N + D +
+	1000*M + 100*O + 10*R + E =:=
+	10000*M + 1000*O + 100*N + 10*E + Y,
+	write(Lst).
 
  % --------------------------
    /*     ?- solv([D,E,M,N,O,R,S,Y]).
@@ -185,6 +204,16 @@ assign_digits([D|Ds], List):-
         1 clause for each definition.
 */
 
+d(x,x,1).
+d(C,x,0) :- number(C).
+d(C*x,x,C) :- number(C).
+d(-U,x,-DU) :- d(U,x,DU).
+d(U+V,x,DU+DV) :- d(U,x,DU), d(V,x,DV).
+d(U-V,x,DU-DV) :- d(U,x,DU), d(V,x,DV).
+d(U*V,x,U*DV+V*DU) :- d(U,x,DU), d(V,x,DV).
+d(U^N,x,N*U^X*DU) :- X is N-1, d(U,x,DU).
+
+
 
 /* 7: fsa(Lst).
  Using the ideas presented on slides 21-25 found in
@@ -209,7 +238,19 @@ i.e.
     etc
  The order of your causes is important.
 
+KNOWN BUGS:
+fsa will match regular expressions of the given format
+however, when asked to generate expressions it runs out of stack space immediately
+
 */
+
+
+fsa([a,b,b|T]) :- side1(T).
+fsa([b,a,a|T]) :- side2(T).
+side1([b,b|T]) :- side1(T).
+side1([a]).
+side2([a,a|T]) :- side2(T).
+side2([b]).
 
 
 
@@ -235,6 +276,18 @@ i.e.
 
 
 **/
+
+treeInsert(node(V,empty,empty),X,node(V,node(X,empty,empty),empty)) :- X < V.
+treeInsert(node(V,empty,empty),X,node(V,empty,node(X,empty,empty))) :- X > V.
+
+treeInsert(node(V,LT,empty),X,node(V,LT,node(X,empty,empty))) :- X > V.
+treeInsert(node(V,LT,empty),X,node(V,R,empty)) :- X < V, treeInsert(LT,X,R).
+
+treeInsert(node(V,empty,RT),X,node(V,node(X,empty,empty),RT)) :- X < V.
+treeInsert(node(V,empty,RT),X,R) :- X > V, treeInsert(RT,X,R).
+
+treeInsert(node(V,LT,RT),X,node(V,RL,RT)) :- X < V, treeInsert(LT,X,RL).
+treeInsert(node(V,LT,RT),X,node(V,LT,RR)) :- X > V, treeInsert(RT,X,RR).
 
 % Some test structures.
 
